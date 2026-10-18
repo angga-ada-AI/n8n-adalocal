@@ -1,0 +1,126 @@
+{
+  "id": "n8n",
+  "nama": "n8n",
+  "deskripsi": "Otomasi alur kerja — hubungkan ratusan layanan tanpa menulis kode.",
+  "kategori": "Otomasi",
+  "sumber": "https://github.com/n8n-io/n8n",
+  "lisensi": "Sustainable Use License",
+  "sorot": [
+    "Node adaCODE ikut terpasang — model kami langsung tersedia di alur kerja.",
+    "Ratusan integrasi siap pakai: Gmail, Sheets, Telegram, HTTP, dan lainnya.",
+    "Alur kerja & kredensial tersimpan di komputer Anda.",
+    "Bisa dipindahkan ke VPS agar alur kerja tetap jalan saat komputer mati."
+  ],
+  "perkiraan": {
+    "disk_mb": 1500,
+    "ram_mb": 400,
+    "catatan": "RAM diukur 19 Agu 2026 dari instance n8n yang berjalan di server (363 MB saat menganggur)."
+  },
+  "ikon": "n8n.png",
+  "gambar": "gambar.jpg",
+  "versi_manifes": 1,
+  "butuh_gpu": false,
+  "bisa_pindah_vps": true,
+  "prasyarat": [
+    {
+      "alat": "node",
+      "minimal": "24"
+    }
+  ],
+  "pasang": [
+    {
+      "aksi": "log",
+      "pesan": "Memasang n8n…"
+    },
+    {
+      "aksi": "shell",
+      "perintah": "npm install n8n@2.41.7 --prefix . --no-audit --no-fund"
+    },
+    {
+      "aksi": "folder",
+      "buat": "data"
+    },
+    {
+      "aksi": "log",
+      "pesan": "Memasang node adaCODE untuk n8n…"
+    },
+    {
+      "aksi": "folder",
+      "buat": "data/.n8n/nodes"
+    },
+    {
+      "aksi": "shell",
+      "perintah": "npm install n8n-nodes-adacode --prefix data/.n8n/nodes --no-audit --no-fund"
+    },
+    {
+      "aksi": "log",
+      "pesan": "n8n terpasang beserta node adaCODE."
+    }
+  ],
+  "jalan": {
+    "daemon": true,
+    "perintah": "node node_modules/n8n/bin/n8n start",
+    "tanda_siap": "Editor is now accessible",
+    "url_cadangan": "http://127.0.0.1:5678",
+    "batas_tunggu_detik": 420,
+    "env": {
+      "N8N_HOST": "127.0.0.1",
+      "N8N_PORT": "5678",
+      "N8N_PROTOCOL": "http",
+      "N8N_USER_FOLDER": "{{folder_app}}/data",
+      "N8N_ENCRYPTION_KEY": "{{kunci_enkripsi_n8n}}",
+      "GENERIC_TIMEZONE": "Asia/Jakarta",
+      "N8N_DEFAULT_LOCALE": "id",
+      "N8N_RUNNERS_ENABLED": "true",
+      "N8N_DIAGNOSTICS_ENABLED": "false",
+      "EXECUTIONS_DATA_PRUNE": "true",
+      "EXECUTIONS_DATA_MAX_AGE": "168",
+      "EXECUTIONS_DATA_PRUNE_MAX_COUNT": "1000",
+      "EXECUTIONS_DATA_SAVE_ON_ERROR": "all",
+      "EXECUTIONS_DATA_SAVE_ON_SUCCESS": "none",
+      "EXECUTIONS_DATA_SAVE_ON_PROGRESS": "false",
+      "EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS": "true"
+    }
+  },
+  "setelah_jalan": [],
+  "perbarui": [
+    {
+      "aksi": "shell",
+      "perintah": "npm update n8n --prefix . --no-audit --no-fund"
+    },
+    {
+      "aksi": "shell",
+      "perintah": "npm update n8n-nodes-adacode --prefix data/.n8n/nodes --no-audit --no-fund"
+    }
+  ],
+  "setel_ulang": [
+    {
+      "aksi": "log",
+      "pesan": "Menghapus data n8n. Alur kerja dan kredensial akan HILANG."
+    },
+    {
+      "aksi": "folder",
+      "kosongkan": "data"
+    }
+  ],
+  "catatan": {
+    "kenapa_prefix_titik": "`npm install n8n --prefix .` memasang ke DALAM folder app, bukan global (`-g`). Manifes Pinokio rujukan memakai `-g` dan itu melanggar aturan SATU FOLDER — app yang terpasang global tak ikut pindah saat folder disalin ke VPS, dan pelanggan menemukan instalasinya kosong di sana.",
+    "kenapa_host_127": "n8n di server memakai 0.0.0.0 karena dilayani lewat subdomain-router. Di mesin pelanggan itu berarti n8n terbuka ke seluruh jaringan lokal — kafe, kantor, kos. 127.0.0.1 membuatnya hanya bisa dijangkau dari mesin itu sendiri.",
+    "kenapa_port_tetap_ditangkap": "USANG — lihat kenapa_tanda_siap_bukan_tangkap_url.",
+    "kunci_enkripsi": "{{kunci_enkripsi_n8n}} WAJIB diturunkan dengan rumus yang SAMA PERSIS dengan server: sha256(userId + '-n8n-encryption-v1') — lihat services/adacode-main/server/utils/provisioner/service-definitions.js. Kalau berbeda, kredensial yang dibuat pelanggan di lokal TIDAK BISA DIBACA setelah pindah ke VPS, dan mereka kehilangan seluruh sambungan yang sudah disetel. Ini titik paling mudah salah di seluruh manifes.",
+    "kenapa_tanpa_basic_auth": "Server memakai N8N_BASIC_AUTH karena instance-nya terbuka di internet. Di lokal, n8n hanya mendengar di 127.0.0.1 sehingga yang bisa menjangkaunya cuma orang yang sudah memegang mesin itu — kata sandi tambahan cuma menambah gesekan tanpa menambah perlindungan. Saat pindah ke VPS, basic auth WAJIB dihidupkan kembali.",
+    "node_adacode": "Model adaCODE masuk ke n8n lewat COMMUNITY NODE `n8n-nodes-adacode`, bukan lewat env dan bukan disuntik ke database. Node-nya dipasang di langkah `pasang` sehingga pelanggan tak perlu membuka Settings → Community Nodes. Yang MASIH manual: membuat kredensial 'adaCODE API' sekali di n8n (Credentials → New) lalu menempel API key-nya — n8n tidak menerima kredensial dari luar tanpa API key n8n, dan API key itu baru ada setelah wizard pemilik pertama selesai. Jadi janji 'tak menyetel apa pun' berlaku penuh untuk Open WebUI, dan berlaku SEBAGIAN untuk n8n.",
+    "kenapa_nodes_di_data": "`N8N_USER_FOLDER` diarahkan ke `{{folder_app}}/data`, jadi n8n mencari community node di `data/.n8n/nodes/node_modules`. Memasangnya ke `~/.n8n/nodes` (bawaan) akan melanggar aturan satu-folder: node-nya tak ikut pindah saat folder app disalin ke VPS, dan workflow pelanggan langsung rusak di sana dengan galat 'node tidak dikenal'.",
+    "kenapa_lama_dan_benderanya": "DIUKUR 19 Agu 2026 di mesin Windows: node_modules n8n = 226.077 berkas / 1,85 GB. Yang lambat BUKAN unduhannya melainkan jumlah berkasnya — tiap berkas yang baru ditulis dipindai Defender, dan npm menulis ratusan ribu. `--no-audit --no-fund` membuang dua panggilan jaringan yang tak berguna di akhir; `--prefer-offline` memakai cache npm lebih dulu sehingga pemasangan kedua jauh lebih cepat. Ketiganya menolong, tapi TIDAK mengubah sifat dasarnya: ini app yang memang besar. Karena itu keluaran perintahnya sekarang DISIARKAN ke kartu (shell_terpantau di pemasang.rs) — pelanggan yang melihat kemajuan akan menunggu; yang melihat layar beku akan menutup app di tengah jalan dan meninggalkan pemasangan separuh.",
+    "enotempty_windows": "Pemasangan pertama 19 Agu gagal: `ENOTEMPTY: directory not empty, rmdir .../@langchain/classic/node_modules/openai` (errno -4051). Bukan paket rusak — npm merapikan pohon dependensi dengan menghapus folder sementara pemindai antivirus masih memegang berkas yang baru ditulis. Ditangani dengan pengulangan otomatis di pemasang.rs (3x, jeda 3 dtk, HANYA untuk galat berkas sementara). Jangan menambal ini dengan menghapus node_modules lalu memasang dari nol: itu membuang 1,85 GB pekerjaan yang sudah benar.",
+    "batas_tunggu": "DINAIKKAN 180→420 dtk (20 Agu): owner mengalami 'n8n tidak menyebut alamatnya dalam 180 detik' pada peluncuran PERTAMA — n8n menginisialisasi database SQLite + migrasi sebelum mencetak 'Editor is now accessible', dan di Windows dengan Defender memindai 226 ribu berkas node_modules, 180 dtk terlalu sempit. Peluncuran berikutnya jauh lebih cepat; batas ini hanya untuk yang pertama.",
+    "kenapa_n8n_dipatok": "5 Okt 2026: `npm install n8n` tanpa versi mengambil 2.41.7, yang menolak start di bawah Node 24 (`bin/n8n` exit 1: Your Node.js version 22.12.0 is currently not supported). Syarat Node n8n naik diam-diam (>=22.16 sejak 2.10, >=22.22 sejak 2.30, >=24 sejak 2.38), jadi versi dipatok dan `minimal` mengikuti `engines` versi itu. Menaikkan versi = cek `npm view n8n@<versi> engines.node` dulu; bila melampaui Node portabel app (pemasang.rs VERSI_NODE), app harus dirilis lebih dulu.",
+    "kenapa_prefer_offline_dicabut": "TERBUKTI MERUSAK 20 Agu: n8n 2.35.4 baru terbit meminta uuid@14.0.2 — versi itu ADA di registry, tapi --prefer-offline memakai metadata cache basi yang hanya mengenal uuid<=11, dan npm gagal ETARGET tiga kali beruntun. Bendera itu menghemat pemasangan ULANG tapi meracuni pemasangan SEGAR setiap kali hulu menerbitkan versi baru. Tarball yang sudah di-cache tetap dipakai npm tanpa bendera ini; yang hilang hanya metadata basi. Jangan dikembalikan.",
+    "kenapa_tanda_siap_bukan_tangkap_url": "DIUKUR 20 Agu 2026 dari boot sungguhan: n8n v2 mencetak 'Editor is now accessible via:' dan URL-nya di DUA BARIS TERPISAH. Pencocokan tangkap_url per-baris tak pernah cocok — n8n yang sehat pun kena timeout 420 dtk. Kelas kesalahan yang sama dengan manifes Open WebUI dulu (pola 'Uvicorn running on' yang tak pernah dicetak). Karena N8N_PORT dipatok lewat env, port bentrok membuat n8n MATI dengan EADDRINUSE — dan jalur gagal-cepat kini melaporkannya beserta keluarannya, jadi url_cadangan tak pernah menunjuk app yang salah port.",
+    "kenapa_lewat_node_langsung": "AKAR SEMUA kegagalan peluncuran n8n 19-20 Agu, baru terlihat setelah jejak merekam keluaran: `cmd` tidak memahami garis miring maju — 'node_modules/.bin/n8n start' dibaca sebagai program 'node_modules' dan gagal seketika dengan 'is not recognized'. Setiap timeout 180/420 dtk sebelumnya duduk di atas galat dua-baris ini. `node <jalur-js>` kebal masalah itu: node menerima garis miring maju di Windows, dan perintahnya sama persis di Unix. JANGAN kembalikan ke node_modules/.bin/* — shim itu hanya bekerja dari shell POSIX."
+  },
+  "tag": "Work Efficiency",
+  "populer": 980,
+  "unggulan": true,
+  "ditambahkan": "2026-08-19"
+}
